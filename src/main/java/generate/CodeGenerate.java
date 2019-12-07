@@ -1,5 +1,11 @@
 package generate;
 
+import util.JdbcUtil;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSetMetaData;
+
 public class CodeGenerate {
     /**
      * 指定实体生成所在的包的路径
@@ -33,5 +39,102 @@ public class CodeGenerate {
      * 默认路径
      */
     private String defaultPath = "/src/main/java/";
+
+    private void init(String tableName){
+        try {
+            Connection conn = JdbcUtil.getConn();
+            String sql = " select * from " + tableName;
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSetMetaData metaData = ps.getMetaData();
+            int size = metaData.getColumnCount();
+            colnames = new String[size];
+            colTypes = new String[size];
+            colSizes = new int[size];
+            for (int i = 0;i < size;i++){
+                colnames[i] = metaData.getColumnName(i + 1);
+                colTypes[i] = metaData.getColumnTypeName(i + 1);
+                colSizes[i] = metaData.getColumnDisplaySize(i +1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+    private String parse(String[] colnames,String[] colTypes,int[] colSizes){
+        StringBuffer str = new StringBuffer();
+        //生成包路径
+        str.append("package " + packageOutPath + ";\r\n");
+        str.append("import java.util.Date;\r\n");
+        str.append("import java.sql.*;\r\n");
+        str.append("import java.lang.*;\r\n");
+        str.append("\r\n");
+        //生成注释
+        str.append("/**\r\n");
+        str.append(" * @author : " + authorName);
+        str.append(" * @version : 1.0");
+        str.append("\r\n");
+        //实体部分 生成变量
+        parseAttrs(str);
+        //实体部分 生成get/set方法
+
+
+
+
+
+
+
+        return str.toString();
+    }
+    private void parseAttrs(StringBuffer str){
+        for (int i = 0;i < colnames.length;i++){
+            String splitName = colnames[i].toLowerCase();
+            String[] split = splitName.split("_");
+            StringBuffer attrName = new StringBuffer();
+            int count = 0;
+            for (String s : split) {
+                if (count > 0){
+                    String first = s.substring(0,1);
+                    s = first.toUpperCase() + s.substring(1);
+                }
+                count++;
+                attrName.append(s);
+            }
+            str.append("\tprivate" + sqlType2JavaType(colTypes[i]) + " " + colnames[i] + ";\r\n");
+        }
+    }
+    private String sqlType2JavaType(String sqlType) {
+
+        if (sqlType.equalsIgnoreCase("bit")) {
+            return "Boolean";
+        } else if (sqlType.equalsIgnoreCase("decimal") || sqlType.equalsIgnoreCase("money")
+                || sqlType.equalsIgnoreCase("bigint")) {
+            return "Long";
+        } else if (sqlType.equalsIgnoreCase("float")) {
+            return "Double";
+        } else if (sqlType.equalsIgnoreCase("int") || sqlType.equalsIgnoreCase("int identity")) {
+            return "Integer";
+        } else if (sqlType.equalsIgnoreCase("image") || sqlType.equalsIgnoreCase("varbinary(max)")
+                || sqlType.equalsIgnoreCase("varbinary") || sqlType.equalsIgnoreCase("udt")
+                || sqlType.equalsIgnoreCase("timestamp") || sqlType.equalsIgnoreCase("binary")) {
+            return "Byte[]";
+        } else if (sqlType.equalsIgnoreCase("nchar") || sqlType.equalsIgnoreCase("nvarchar(max)")
+                || sqlType.equalsIgnoreCase("nvarchar") || sqlType.equalsIgnoreCase("nvarchar(ntext)")
+                || sqlType.equalsIgnoreCase("uniqueidentifier") || sqlType.equalsIgnoreCase("xml")
+                || sqlType.equalsIgnoreCase("char") || sqlType.equalsIgnoreCase("varchar(max)")
+                || sqlType.equalsIgnoreCase("text") || sqlType.equalsIgnoreCase("varchar")) {
+            return "String";
+        } else if (sqlType.equalsIgnoreCase("real")) {
+            return "Float";
+        } else if (sqlType.equalsIgnoreCase("smallint") || sqlType.equalsIgnoreCase("tinyint")) {
+            return "Short";
+        } else if (sqlType.equalsIgnoreCase("date") || sqlType.equalsIgnoreCase("datetime")
+                || sqlType.equalsIgnoreCase("time") || sqlType.equalsIgnoreCase("datetime2")) {
+            return "Date";
+        } else {
+            System.out.println("数据类型异常，类型为：" + sqlType);
+        }
+
+        return null;
+    }
 
 }
