@@ -40,7 +40,7 @@ public class CodeGenerate {
      */
     private String defaultPath = "/src/main/java/";
 
-    private void init(String tableName){
+    public void init(String tableName){
         try {
             Connection conn = JdbcUtil.getConn();
             String sql = " select * from " + tableName;
@@ -60,7 +60,7 @@ public class CodeGenerate {
         }
 
     }
-    private String parse(String[] colnames,String[] colTypes,int[] colSizes){
+    public String parse(String[] colnames,String[] colTypes,int[] colSizes){
         StringBuffer str = new StringBuffer();
         //生成包路径
         str.append("package " + packageOutPath + ";\r\n");
@@ -70,13 +70,13 @@ public class CodeGenerate {
         str.append("\r\n");
         //生成注释
         str.append("/**\r\n");
-        str.append(" * @author : " + authorName);
-        str.append(" * @version : 1.0");
-        str.append("\r\n");
+        str.append(" * @author : " + authorName + "\r\n");
+        str.append(" * @version : 1.0" + "\r\n");
+        str.append(" */\r\n");
         //实体部分 生成变量
         parseAttrs(str);
         //实体部分 生成get/set方法
-
+        parseMethod(str);
 
 
 
@@ -87,21 +87,59 @@ public class CodeGenerate {
     }
     private void parseAttrs(StringBuffer str){
         for (int i = 0;i < colnames.length;i++){
-            String splitName = colnames[i].toLowerCase();
-            String[] split = splitName.split("_");
-            StringBuffer attrName = new StringBuffer();
-            int count = 0;
-            for (String s : split) {
-                if (count > 0){
-                    String first = s.substring(0,1);
-                    s = first.toUpperCase() + s.substring(1);
-                }
-                count++;
-                attrName.append(s);
-            }
-            str.append("\tprivate" + sqlType2JavaType(colTypes[i]) + " " + colnames[i] + ";\r\n");
+            String attrName = generateAttrName(colnames[i]);
+            str.append("\tprivate " + sqlType2JavaType(colTypes[i]) + " " + attrName + ";\r\n");
         }
     }
+    private void parseMethod(StringBuffer str){
+        for (int i = 0;i < colnames.length;i++){
+            String attrName = generateAttrName(colnames[i]);
+            //set
+            str.append("\tpublic void set" + generateMethodAttrName(attrName) + "(" + sqlType2JavaType(colTypes[i]) + attrName + ") { \r\n");
+            str.append("\t  this." + attrName + " = " + attrName + ";\r\n");
+            str.append("\t}\r\n");
+            //get
+            str.append("\tpublic "+sqlType2JavaType(colTypes[i])+ " get"+attrName+"(){\r\n");
+            str.append("\t  return "+attrName + ";\r\n");
+            str.append("\t}\r\n");
+        }
+        //toString
+        str.append("\tpublic void toString(){ \r\n");
+        str.append("\t  System.out.println(");
+        for (int i = 0; i < colnames.length; i++) {
+            String attrName = generateAttrName(colnames[i]);
+            str.append("\""+attrName+"\"="+attrName);
+        }
+        str.append("\")\r\n");
+        str.append("\t}");
+    }
+    private String generateMethodAttrName(String dbName){
+        String name = dbName.toLowerCase();
+        String[] split = name.split("_");
+        StringBuffer attrName = new StringBuffer();
+        for (String s : split) {
+            String first = s.substring(0,1);
+            s = first.toUpperCase() + s.substring(1);
+            attrName.append(s);
+        }
+        return attrName.toString();
+    }
+    private String generateAttrName(String dbName){
+        String name = dbName.toLowerCase();
+        String[] split = name.split("_");
+        StringBuffer attrName = new StringBuffer();
+        int count = 0;
+        for (String s : split) {
+            if (count > 0){
+                String first = s.substring(0,1);
+                s = first.toUpperCase() + s.substring(1);
+            }
+            count++;
+            attrName.append(s);
+        }
+        return attrName.toString();
+    }
+
     private String sqlType2JavaType(String sqlType) {
 
         if (sqlType.equalsIgnoreCase("bit")) {
@@ -137,4 +175,55 @@ public class CodeGenerate {
         return null;
     }
 
+    public String getPackageOutPath() {
+        return packageOutPath;
+    }
+
+    public void setPackageOutPath(String packageOutPath) {
+        this.packageOutPath = packageOutPath;
+    }
+
+    public String getAuthorName() {
+        return authorName;
+    }
+
+    public void setAuthorName(String authorName) {
+        this.authorName = authorName;
+    }
+
+    public String getTableName() {
+        return tableName;
+    }
+
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getDefaultPath() {
+        return defaultPath;
+    }
+
+    public void setDefaultPath(String defaultPath) {
+        this.defaultPath = defaultPath;
+    }
+
+    public String[] getColnames() {
+        return colnames;
+    }
+
+    public String[] getColTypes() {
+        return colTypes;
+    }
+
+    public int[] getColSizes() {
+        return colSizes;
+    }
 }

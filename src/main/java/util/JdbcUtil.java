@@ -14,7 +14,7 @@ public class JdbcUtil {
         ds = new BasicDataSource();
         //读取配置文件
         Properties pro = new Properties();
-        InputStream ips = JdbcUtil.class.getResourceAsStream("jdbc.properties");
+        InputStream ips = JdbcUtil.class.getClassLoader().getResourceAsStream("jdbc.properties");
         try {
             pro.load(ips);
             String driver = pro.getProperty("driver");
