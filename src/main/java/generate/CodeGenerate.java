@@ -6,6 +6,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSetMetaData;
 
+/**
+ * @author lbw
+ */
 public class CodeGenerate {
     /**
      * 指定实体生成所在的包的路径
