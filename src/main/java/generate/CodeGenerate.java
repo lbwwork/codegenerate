@@ -98,23 +98,14 @@ public class CodeGenerate {
         for (int i = 0;i < colnames.length;i++){
             String attrName = generateAttrName(colnames[i]);
             //set
-            str.append("\tpublic void set" + generateMethodAttrName(attrName) + "(" + sqlType2JavaType(colTypes[i]) + attrName + ") { \r\n");
+            str.append("\tpublic void set" + generateMethodAttrName(attrName) + "(" + sqlType2JavaType(colTypes[i]) + " "+ attrName + ") { \r\n");
             str.append("\t  this." + attrName + " = " + attrName + ";\r\n");
             str.append("\t}\r\n");
             //get
-            str.append("\tpublic "+sqlType2JavaType(colTypes[i])+ " get"+attrName+"(){\r\n");
+            str.append("\tpublic "+sqlType2JavaType(colTypes[i])+ " get" + generateMethodAttrName(attrName)+"(){\r\n");
             str.append("\t  return "+attrName + ";\r\n");
             str.append("\t}\r\n");
         }
-        //toString
-        str.append("\tpublic void toString(){ \r\n");
-        str.append("\t  System.out.println(");
-        for (int i = 0; i < colnames.length; i++) {
-            String attrName = generateAttrName(colnames[i]);
-            str.append("\""+attrName+"\"="+attrName);
-        }
-        str.append("\")\r\n");
-        str.append("\t}");
     }
     private String generateMethodAttrName(String dbName){
         String name = dbName.toLowerCase();
